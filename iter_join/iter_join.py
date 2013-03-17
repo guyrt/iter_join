@@ -1,4 +1,25 @@
-
+def inner_join(left_iter, right_iter, left_access, right_access):
+    try:
+        left_value = left_iter.next()
+        left_key = left_access(left_value)
+        # Main loop: yield either zipped left pairs or zipped right pairs.
+        right_value = right_iter.next()
+        right_key = right_access(right_value)
+        while 1:
+            while left_key > right_key:
+                right_value = right_iter.next()
+                right_key = right_access(right_value)
+            while left_key < right_key:
+                left_value = left_iter.next()
+                left_key = left_access(left_value)
+            
+            if left_key == right_key:
+                yield left_value + right_value
+                right_value = right_iter.next()
+                right_key = right_access(right_value)
+    except StopIteration:
+        # an iteration ran out.
+        pass
 
 def left_join(left_iter, right_iter, left_access, right_access, right_empty=None):
     """
@@ -11,6 +32,12 @@ def left_join(left_iter, right_iter, left_access, right_access, right_empty=None
         right_access: func(right_value) returns key value for values in right.
         right_empty: values to append for missing right sides. Defaults to a tuple of "Nones"
     """
+    for l, r in _left_join(left_iter, right_iter, left_access, right_access, right_empty):
+        yield l + r
+
+    
+def _left_join(left_iter, right_iter, left_access, right_access, right_empty=None):
+    # Do left join
     left_yielded = False
     try:
         left_value = left_iter.next()
@@ -27,14 +54,14 @@ def left_join(left_iter, right_iter, left_access, right_access, right_empty=None
                     right_key = right_access(right_value)
                 while left_key < right_key:
                     if not left_yielded:
-                        yield left_value + right_empty
+                        yield left_value, right_empty
                         left_yielded = True
                     left_value = left_iter.next()
                     left_key = left_access(left_value)
                     left_yielded = False
                 
                 if left_key == right_key:
-                    yield left_value + right_value
+                    yield left_value, right_value
                     left_yielded = True
                     right_value = right_iter.next()
                     right_key = right_access(right_value)
@@ -44,9 +71,9 @@ def left_join(left_iter, right_iter, left_access, right_access, right_empty=None
             if not right_empty:
                 right_empty = (None, )
         if not left_yielded:
-            yield left_value + right_empty
+            yield left_value, right_empty
         while 1:
-            yield left_iter.next() + right_empty
+            yield left_iter.next(), right_empty
         
     except StopIteration:
         # left iteration ran out.
@@ -54,4 +81,5 @@ def left_join(left_iter, right_iter, left_access, right_access, right_empty=None
         
 
 def right_join(left_iter, right_iter, left_access, right_access, left_empty=None):
-    left_join(right_iter, left_iter, right_access, left_access, left_empty)
+    for r, l in _left_join(right_iter, left_iter, right_access, left_access, left_empty):
+        yield l + r
