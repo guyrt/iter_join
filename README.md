@@ -1,4 +1,6 @@
 iter_join
 =========
 
-Join operations on pairs of iterables
+Provides join operations on pairs of iterables.
+
+Supported (so far) are left, inner, and right joins. All three use the standard SQL rules over iterables.
