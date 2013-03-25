@@ -1,9 +1,9 @@
 from distutils.core import setup
 
 setup(
-    name='iterjoin',
+    name='iter_join',
     version='0.1',
-    packages=['iterjoin'],
+    packages=['iter_join'],
     url='',
     license='',
     author='guyrt',
